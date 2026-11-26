@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#0D47A1</color>
+    <color name="on_primary">#FFFFFF</color>
     <color name="background">#F5F7FA</color>
     <color name="on_background">#102027</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="on_surface">#102027</color>
+    <color name="on_surface_variant">#3A4A54</color>
+    <color name="outline">#5A6B76</color>
     <color name="ic_launcher_background">#0D47A1</color>
 </resources>
