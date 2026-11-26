@@ -36,10 +36,95 @@ data class Lote(
     val actualizadoEn: String,
 )
 
+enum class LoteEstatus {
+    DISPONIBLE,
+    CONTENIDO,
+    EMBARCADO,
+    RECIBIDO,
+}
+
+data class LoteDetalle(
+    val lote: Lote,
+    val estatus: LoteEstatus,
+    val expedicionId: Int? = null,
+    val recepcionId: Int? = null,
+)
+
+data class LoteProducto(
+    val id: Int,
+    val idLote: Int,
+    val claveProducto: String,
+    val cantidad: Double,
+    val idUnidad: Int,
+)
+
+data class LoteReferencia(
+    val id: Int,
+    val idLote: Int,
+    val idTipo: Int,
+    val referencia: String,
+    val descripcion: String?,
+)
+
+data class ReferenciaTipo(
+    val id: Int,
+    val codigo: String,
+    val nombre: String,
+    val activo: Boolean,
+)
+
+data class UnidadMedida(
+    val id: Int,
+    val codigo: String,
+    val nombre: String,
+    val activo: Boolean,
+)
+
+data class LoteContenido(
+    val productos: List<LoteProducto> = emptyList(),
+    val hijos: List<Lote> = emptyList(),
+    val referencias: List<LoteReferencia> = emptyList(),
+)
+
+data class CreateLoteProductoRequest(
+    val idLote: Int,
+    val claveProducto: String,
+    val cantidad: Double,
+    val idUnidad: Int,
+)
+
+data class UpdateLoteProductoRequest(
+    val idLote: Int,
+    val claveProducto: String,
+    val cantidad: Double,
+    val idUnidad: Int,
+)
+
+data class CreateLoteReferenciaRequest(
+    val idLote: Int,
+    val idTipo: Int,
+    val referencia: String,
+    val descripcion: String? = null,
+    val usuarioId: Int? = null,
+    val idOrigenUsuario: Int? = null,
+)
+
+data class UpdateLoteReferenciaRequest(
+    val idLote: Int,
+    val idTipo: Int,
+    val referencia: String,
+    val descripcion: String? = null,
+)
+
+data class LoteTipoUnidad(
+    val id: Int,
+    val idTipo: Int,
+    val idUnidad: Int,
+)
+
 data class CreateLoteRequest(
     val idTipo: Int,
     val padreId: Int? = null,
-    val idUnidad: Int? = null,
     val usuarioId: Int? = null,
     val idOrigenUsuario: Int? = null,
 )
@@ -60,3 +145,13 @@ data class PagedResult<T>(
     val items: List<T>,
     val meta: PageMeta,
 )
+
+data class LoteDeleteBlockers(
+    val hasProductos: Boolean = false,
+    val hasReferencias: Boolean = false,
+    val hasHijos: Boolean = false,
+    val hasUbicaciones: Boolean = false,
+) {
+    val canDelete: Boolean
+        get() = !hasProductos && !hasReferencias && !hasHijos && !hasUbicaciones
+}

@@ -16,6 +16,7 @@ object EmpaqueDrawer {
         toolbar: MaterialToolbar,
         drawerContent: DrawerContentEmpaqueBinding,
         onConsultarLotes: () -> Unit,
+        onBeforeBack: () -> Boolean = { false },
     ) {
         toolbar.setNavigationOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
@@ -44,12 +45,16 @@ object EmpaqueDrawer {
             activity,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                        drawerLayout.closeDrawer(GravityCompat.START)
-                    } else {
-                        isEnabled = false
-                        activity.onBackPressedDispatcher.onBackPressed()
-                        isEnabled = true
+                    when {
+                        onBeforeBack() -> Unit
+                        drawerLayout.isDrawerOpen(GravityCompat.START) -> {
+                            drawerLayout.closeDrawer(GravityCompat.START)
+                        }
+                        else -> {
+                            isEnabled = false
+                            activity.onBackPressedDispatcher.onBackPressed()
+                            isEnabled = true
+                        }
                     }
                 }
             },

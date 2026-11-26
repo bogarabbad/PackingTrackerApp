@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="empaque_stroke">2dp</dimen>
+    <dimen name="empaque_stroke">1.5dp</dimen>
+    <dimen name="ui_screen_padding">10dp</dimen>
+    <dimen name="ui_section_gap">10dp</dimen>
+    <dimen name="ui_action_button">52dp</dimen>
+    <dimen name="ui_action_icon">24dp</dimen>
+    <dimen name="ui_filter_button">36dp</dimen>
+    <dimen name="ui_filter_icon_padding">6dp</dimen>
+    <dimen name="ui_chip_min_height">36dp</dimen>
+    <dimen name="ui_drawer_item_height">44dp</dimen>
+    <dimen name="ui_toolbar_height">48dp</dimen>
+    <dimen name="ui_list_row_padding_v">8dp</dimen>
+    <dimen name="ui_list_row_padding_h">12dp</dimen>
+    <dimen name="home_module_height">132dp</dimen>
+    <dimen name="home_module_gap">12dp</dimen>
+    <dimen name="home_module_icon">36dp</dimen>
 </resources>

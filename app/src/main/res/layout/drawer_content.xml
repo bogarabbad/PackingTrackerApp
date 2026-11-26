@@ -5,21 +5,24 @@
     android:layout_height="match_parent"
     android:background="@color/surface"
     android:orientation="vertical"
-    android:paddingBottom="12dp">
+    android:paddingBottom="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingStart="14dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/nav_header_subtitle"
             android:textColor="@color/on_primary"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -28,16 +31,20 @@
         style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:gravity="start|center_vertical"
-        android:minHeight="56dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="@dimen/ui_drawer_item_height"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:text="@string/empaque_title"
         android:textColor="@color/on_surface"
+        android:textSize="14sp"
         app:icon="@drawable/ic_empaque"
         app:iconGravity="textStart"
-        app:iconPadding="16dp"
+        app:iconPadding="12dp"
+        app:iconSize="20dp"
         app:iconTint="@color/on_surface" />
 
     <com.google.android.material.button.MaterialButton
@@ -46,15 +53,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="start|center_vertical"
-        android:minHeight="56dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="@dimen/ui_drawer_item_height"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:text="@string/nav_logout"
         android:textColor="@color/on_surface"
+        android:textSize="14sp"
         android:visibility="gone"
         app:icon="@drawable/ic_logout"
         app:iconGravity="textStart"
-        app:iconPadding="16dp"
+        app:iconPadding="12dp"
+        app:iconSize="20dp"
         app:iconTint="@color/on_surface" />
 
     <View
@@ -68,14 +79,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="start|center_vertical"
-        android:minHeight="56dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="@dimen/ui_drawer_item_height"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:text="@string/config_open"
         android:textColor="@color/on_surface"
+        android:textSize="14sp"
         app:icon="@drawable/ic_settings"
         app:iconGravity="textStart"
-        app:iconPadding="16dp"
+        app:iconPadding="12dp"
+        app:iconSize="20dp"
         app:iconTint="@color/on_surface" />
 
 </LinearLayout>

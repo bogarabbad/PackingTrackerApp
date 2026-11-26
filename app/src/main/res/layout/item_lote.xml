@@ -4,32 +4,32 @@
     android:layout_height="wrap_content"
     android:background="@color/surface"
     android:orientation="vertical"
-    android:paddingStart="16dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="14dp">
+    android:paddingStart="@dimen/ui_list_row_padding_h"
+    android:paddingTop="@dimen/ui_list_row_padding_v"
+    android:paddingEnd="@dimen/ui_list_row_padding_h"
+    android:paddingBottom="@dimen/ui_list_row_padding_v">
 
     <TextView
         android:id="@+id/loteIdText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/on_surface"
-        android:textSize="20sp"
+        android:textSize="15sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/loteTipoText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:textColor="@color/on_surface_variant"
-        android:textSize="15sp" />
+        android:textSize="13sp" />
 
     <TextView
         android:id="@+id/loteMetaText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:textColor="@color/on_surface_variant"
-        android:textSize="13sp" />
+        android:textSize="12sp" />
 </LinearLayout>

@@ -8,5 +8,6 @@
     <color name="on_surface">#E8EEF2</color>
     <color name="on_surface_variant">#B0BEC5</color>
     <color name="outline">#90A4AE</color>
+    <color name="outline_muted">#3A4650</color>
     <color name="ic_launcher_background">#0D47A1</color>
 </resources>

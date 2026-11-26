@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp">
+
+    <EditText
+        android:id="@+id/productoClaveInput"
+        android:layout_width="0dp"
+        android:layout_height="36dp"
+        android:layout_weight="1"
+        android:background="@drawable/bg_lote_id_input"
+        android:hint="@string/empaque_producto_clave"
+        android:importantForAutofill="no"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textColor="@color/on_background"
+        android:textColorHint="@color/on_surface_variant"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@+id/productoCantidadInput"
+        android:layout_width="56dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/bg_lote_id_input"
+        android:gravity="center"
+        android:hint="@string/empaque_producto_cantidad_short"
+        android:importantForAutofill="no"
+        android:imeOptions="actionDone"
+        android:inputType="numberDecimal"
+        android:maxLines="1"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:textColor="@color/on_background"
+        android:textColorHint="@color/on_surface_variant"
+        android:textSize="12sp" />
+
+    <Spinner
+        android:id="@+id/productoUnidadSpinner"
+        android:layout_width="72dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/bg_lote_id_input"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp" />
+
+    <ImageButton
+        android:id="@+id/productoSaveButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="2dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/empaque_contenido_save"
+        android:padding="6dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_save"
+        android:tint="@color/on_background"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/productoDeleteButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/empaque_contenido_delete"
+        android:padding="6dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_delete"
+        android:tint="@color/on_background" />
+</LinearLayout>
