@@ -82,6 +82,7 @@ class PackingTrackerApi(
                 usuarioId = usuario.getInt("ID"),
                 usuarioCodigo = usuario.getString("CODIGO"),
                 usuarioNombre = usuario.getString("NOMBRE"),
+                usuarioUbicacionId = usuario.nullableInt("UBICACION_ID"),
             )
         }
     }
@@ -384,6 +385,143 @@ class PackingTrackerApi(
             .build()
 
         return executeObject(httpRequest) { data, _ -> parseLote(data) }
+    }
+
+    fun listUbicaciones(
+        credentials: ApiCredentials,
+        q: String? = null,
+        activo: Boolean? = true,
+        page: Int = 1,
+        items: Int = 20,
+    ): PagedResult<Ubicacion> {
+        val urlBuilder = "$root/ubicaciones".toHttpUrl().newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("items", items.toString())
+        if (!q.isNullOrBlank()) {
+            urlBuilder.addQueryParameter("q", q.trim())
+        }
+        if (activo != null) {
+            urlBuilder.addQueryParameter("activo", activo.toString())
+        }
+
+        val httpRequest = Request.Builder()
+            .url(urlBuilder.build())
+            .get()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executePaged(httpRequest) { array, meta ->
+            PagedResult(
+                items = array.mapObjects { parseUbicacion(it) },
+                meta = meta,
+            )
+        }
+    }
+
+    fun getUbicacion(credentials: ApiCredentials, id: Int): Ubicacion {
+        val httpRequest = Request.Builder()
+            .url("$root/ubicaciones/$id")
+            .get()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseUbicacion(data) }
+    }
+
+    fun findUbicacionByCodigo(
+        credentials: ApiCredentials,
+        codigo: String,
+        activo: Boolean = true,
+    ): Ubicacion? {
+        val needle = codigo.trim()
+        if (needle.isEmpty()) return null
+        val result = listUbicaciones(
+            credentials = credentials,
+            q = needle,
+            activo = activo,
+            page = 1,
+            items = 20,
+        )
+        return result.items.firstOrNull { it.codigo.equals(needle, ignoreCase = true) }
+    }
+
+    fun listLotesUbicaciones(
+        credentials: ApiCredentials,
+        idLote: Int,
+        idTipo: Int? = null,
+        page: Int = 1,
+        items: Int = 20,
+    ): PagedResult<LoteUbicacion> {
+        val urlBuilder = "$root/lotes-ubicaciones".toHttpUrl().newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("items", items.toString())
+            .addQueryParameter("id_lote", idLote.toString())
+        if (idTipo != null) {
+            urlBuilder.addQueryParameter("id_tipo", idTipo.toString())
+        }
+
+        val httpRequest = Request.Builder()
+            .url(urlBuilder.build())
+            .get()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executePaged(httpRequest) { array, meta ->
+            PagedResult(
+                items = array.mapObjects { parseLoteUbicacion(it) },
+                meta = meta,
+            )
+        }
+    }
+
+    fun createLoteUbicacion(
+        credentials: ApiCredentials,
+        request: CreateLoteUbicacionRequest,
+    ): LoteUbicacion {
+        val bodyJson = JSONObject()
+            .put("ID_LOTE", request.idLote)
+            .put("UBICACION_ID", request.ubicacionId)
+            .put("ID_TIPO", request.idTipo)
+            .put("USUARIO_ID", request.usuarioId ?: JSONObject.NULL)
+            .put("ID_ORIGEN_USUARIO", request.idOrigenUsuario ?: JSONObject.NULL)
+            .toString()
+
+        val httpRequest = Request.Builder()
+            .url("$root/lotes-ubicaciones")
+            .post(bodyJson.toRequestBody(JSON_MEDIA_TYPE))
+            .header("Accept", "application/json")
+            .header("Content-Type", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseLoteUbicacion(data) }
+    }
+
+    fun updateLoteUbicacion(
+        credentials: ApiCredentials,
+        id: Int,
+        request: CreateLoteUbicacionRequest,
+    ): LoteUbicacion {
+        val bodyJson = JSONObject()
+            .put("ID_LOTE", request.idLote)
+            .put("UBICACION_ID", request.ubicacionId)
+            .put("ID_TIPO", request.idTipo)
+            .put("USUARIO_ID", request.usuarioId ?: JSONObject.NULL)
+            .put("ID_ORIGEN_USUARIO", request.idOrigenUsuario ?: JSONObject.NULL)
+            .toString()
+
+        val httpRequest = Request.Builder()
+            .url("$root/lotes-ubicaciones/$id")
+            .put(bodyJson.toRequestBody(JSON_MEDIA_TYPE))
+            .header("Accept", "application/json")
+            .header("Content-Type", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseLoteUbicacion(data) }
     }
 
     fun getLote(credentials: ApiCredentials, id: Int): Lote {
@@ -720,6 +858,26 @@ class PackingTrackerApi(
         idTipo = json.getInt("ID_TIPO"),
         padreId = json.nullableInt("PADRE_ID"),
         idUnidad = json.nullableInt("ID_UNIDAD"),
+        usuarioId = json.nullableInt("USUARIO_ID"),
+        idOrigenUsuario = json.nullableInt("ID_ORIGEN_USUARIO"),
+        creadoEn = json.getString("CREADO_EN"),
+        actualizadoEn = json.getString("ACTUALIZADO_EN"),
+    )
+
+    private fun parseUbicacion(json: JSONObject): Ubicacion = Ubicacion(
+        id = json.getInt("ID"),
+        idCategoria = json.getInt("ID_CATEGORIA"),
+        padreId = json.nullableInt("PADRE_ID"),
+        codigo = json.getString("CODIGO"),
+        nombre = json.getString("NOMBRE"),
+        activo = json.getBoolean("ACTIVO"),
+    )
+
+    private fun parseLoteUbicacion(json: JSONObject): LoteUbicacion = LoteUbicacion(
+        id = json.getInt("ID"),
+        idLote = json.getInt("ID_LOTE"),
+        ubicacionId = json.getInt("UBICACION_ID"),
+        idTipo = json.getInt("ID_TIPO"),
         usuarioId = json.nullableInt("USUARIO_ID"),
         idOrigenUsuario = json.nullableInt("ID_ORIGEN_USUARIO"),
         creadoEn = json.getString("CREADO_EN"),

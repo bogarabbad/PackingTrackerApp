@@ -95,6 +95,7 @@ class LoginActivity : AppCompatActivity() {
                         usuarioId = login.usuarioId,
                         usuarioCodigo = login.usuarioCodigo,
                         usuarioNombre = login.usuarioNombre,
+                        usuarioUbicacionId = login.usuarioUbicacionId,
                     )
                 )
                 startActivity(

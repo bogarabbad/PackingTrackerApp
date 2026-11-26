@@ -56,4 +56,5 @@ data class LoginResult(
     val usuarioId: Int,
     val usuarioCodigo: String,
     val usuarioNombre: String,
+    val usuarioUbicacionId: Int? = null,
 )

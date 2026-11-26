@@ -129,6 +129,45 @@ data class CreateLoteRequest(
     val idOrigenUsuario: Int? = null,
 )
 
+data class Ubicacion(
+    val id: Int,
+    val idCategoria: Int,
+    val padreId: Int?,
+    val codigo: String,
+    val nombre: String,
+    val activo: Boolean,
+) {
+    fun displayLabel(): String {
+        val codigoLabel = codigo.takeIf { it.isNotBlank() }
+        val nombreLabel = nombre.takeIf { it.isNotBlank() }
+        return when {
+            codigoLabel != null && nombreLabel != null -> "$codigoLabel · $nombreLabel"
+            codigoLabel != null -> codigoLabel
+            nombreLabel != null -> nombreLabel
+            else -> "Ubicación #$id"
+        }
+    }
+}
+
+data class LoteUbicacion(
+    val id: Int,
+    val idLote: Int,
+    val ubicacionId: Int,
+    val idTipo: Int,
+    val usuarioId: Int?,
+    val idOrigenUsuario: Int?,
+    val creadoEn: String,
+    val actualizadoEn: String,
+)
+
+data class CreateLoteUbicacionRequest(
+    val idLote: Int,
+    val ubicacionId: Int,
+    val idTipo: Int,
+    val usuarioId: Int? = null,
+    val idOrigenUsuario: Int? = null,
+)
+
 data class ApiCredentials(
     val authorizationBearer: String,
     val deviceToken: String? = null,

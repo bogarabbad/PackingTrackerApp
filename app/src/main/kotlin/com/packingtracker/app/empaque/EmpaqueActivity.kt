@@ -27,6 +27,7 @@ import com.packingtracker.app.api.ApiException
 import com.packingtracker.app.api.CreateLoteProductoRequest
 import com.packingtracker.app.api.CreateLoteReferenciaRequest
 import com.packingtracker.app.api.CreateLoteRequest
+import com.packingtracker.app.api.CreateLoteUbicacionRequest
 import com.packingtracker.app.api.Lote
 import com.packingtracker.app.api.LoteContenido
 import com.packingtracker.app.api.LoteDeleteBlockers
@@ -35,8 +36,10 @@ import com.packingtracker.app.api.LoteEstatus
 import com.packingtracker.app.api.LoteProducto
 import com.packingtracker.app.api.LoteReferencia
 import com.packingtracker.app.api.LoteTipo
+import com.packingtracker.app.api.LoteUbicacion
 import com.packingtracker.app.api.PackingTrackerApi
 import com.packingtracker.app.api.ReferenciaTipo
+import com.packingtracker.app.api.Ubicacion
 import com.packingtracker.app.api.UnidadMedida
 import com.packingtracker.app.api.UpdateLoteProductoRequest
 import com.packingtracker.app.api.UpdateLoteReferenciaRequest
@@ -123,6 +126,14 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.referenciasScanInput.setOnEditorActionListener { _, actionId, event ->
             if (isSubmitEditorAction(actionId, event)) {
                 submitReferenciaScan()
+                true
+            } else {
+                false
+            }
+        }
+        binding.destinoClaveInput.setOnEditorActionListener { _, actionId, event ->
+            if (isSubmitEditorAction(actionId, event)) {
+                submitDestinoScan()
                 true
             } else {
                 false
@@ -293,12 +304,37 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
                 referencias = referencias,
             )
         }
+        val origen = loadLoteUbicacion(api, credentials, loteId, ID_TIPO_ORIGEN)
+        val destino = loadLoteUbicacion(api, credentials, loteId, ID_TIPO_DESTINO)
         return LoteSnapshot(
             detalle = detalle,
             blockers = blockers,
             contenido = contenido,
             unidadesTipo = unidadesTipo,
+            origenRelacion = origen.first,
+            origenUbicacion = origen.second,
+            destinoRelacion = destino.first,
+            destinoUbicacion = destino.second,
         )
+    }
+
+    private fun loadLoteUbicacion(
+        api: PackingTrackerApi,
+        credentials: ApiCredentials,
+        loteId: Int,
+        idTipo: Int,
+    ): Pair<LoteUbicacion?, Ubicacion?> {
+        val relacion = api.listLotesUbicaciones(
+            credentials = credentials,
+            idLote = loteId,
+            idTipo = idTipo,
+            page = 1,
+            items = 1,
+        ).items.firstOrNull() ?: return null to null
+        val ubicacion = runCatching {
+            api.getUbicacion(credentials, relacion.ubicacionId)
+        }.getOrNull()
+        return relacion to ubicacion
     }
 
     private fun applyLoteDetalle(snapshot: LoteSnapshot) {
@@ -314,6 +350,10 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
             recepcionId = detalle.recepcionId,
             deleteBlockers = snapshot.blockers,
             contenido = snapshot.contenido,
+            origenRelacion = snapshot.origenRelacion,
+            origenUbicacion = snapshot.origenUbicacion,
+            destinoRelacion = snapshot.destinoRelacion,
+            destinoUbicacion = snapshot.destinoUbicacion,
         )
         if (binding.loteIdInput.text?.toString() != detalle.lote.id.toString()) {
             binding.loteIdInput.setText(detalle.lote.id.toString())
@@ -352,6 +392,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.referenciasFilterInput.setText("")
         binding.productosScanInput.setText("")
         binding.referenciasScanInput.setText("")
+        binding.destinoClaveInput.setText("")
         suppressProductosFilterCallback = false
         suppressReferenciasFilterCallback = false
         if (!keepInput) {
@@ -377,6 +418,10 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
             binding.lotePadreValue.text = ""
             binding.loteCreadoValue.text = ""
             binding.loteEstatusText.text = ""
+            binding.ubicacionesSection.visibility = View.GONE
+            binding.origenValue.text = ""
+            binding.destinoValue.text = ""
+            binding.destinoClaveInput.setText("")
             binding.referenciasScanSection.visibility = View.GONE
             binding.loteReferenciasSection.visibility = View.GONE
             binding.loteReferenciasList.removeAllViews()
@@ -411,6 +456,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         )
         binding.loteEstatusText.text = formatEstatus(loaded)
         binding.loteInfoSection.visibility = View.VISIBLE
+        renderUbicaciones(loaded)
         renderLoteContents(loaded)
         renderLoteReferencias(loaded)
 
@@ -430,6 +476,22 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
                 binding.deleteBlockedText.visibility = View.GONE
                 binding.deleteBlockedText.text = ""
             }
+        }
+    }
+
+    private fun renderUbicaciones(loaded: LoadedLote) {
+        binding.ubicacionesSection.visibility = View.VISIBLE
+        binding.origenValue.text = when {
+            loaded.origenUbicacion != null -> loaded.origenUbicacion.displayLabel()
+            loaded.origenRelacion != null ->
+                getString(R.string.empaque_destino_ubicacion_fallback, loaded.origenRelacion.ubicacionId)
+            else -> getString(R.string.empaque_origen_sin_asignar)
+        }
+        binding.destinoValue.text = when {
+            loaded.destinoUbicacion != null -> loaded.destinoUbicacion.displayLabel()
+            loaded.destinoRelacion != null ->
+                getString(R.string.empaque_destino_ubicacion_fallback, loaded.destinoRelacion.ubicacionId)
+            else -> getString(R.string.empaque_destino_sin_asignar)
         }
     }
 
@@ -767,6 +829,71 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.productosScanInput.requestFocus()
     }
 
+    private fun submitDestinoScan() {
+        val loaded = loadedLote ?: return
+        if (!loaded.canDeleteByEstatus) {
+            Toast.makeText(this, R.string.empaque_destino_blocked_estatus, Toast.LENGTH_LONG).show()
+            return
+        }
+        val clave = binding.destinoClaveInput.text?.toString().orEmpty().trim()
+        if (clave.isEmpty()) return
+        binding.destinoClaveInput.setText("")
+        assignDestino(clave)
+        binding.destinoClaveInput.requestFocus()
+    }
+
+    private fun assignDestino(claveUbicacion: String) {
+        val loaded = loadedLote ?: return
+        val credentials = resolveCredentials() ?: return
+        val session = sessionStore.load()
+        val usuarioId = session.usuarioId
+        val idOrigenUsuario = if (usuarioId != null) ORIGEN_USUARIO_INTERNO else null
+        setCreating(true)
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val api = PackingTrackerApi(configStore.load().serverUrl)
+                    val ubicacion = api.findUbicacionByCodigo(credentials, claveUbicacion)
+                        ?: throw ApiException(code = "ubicacion_not_found", httpStatus = 404)
+                    val request = CreateLoteUbicacionRequest(
+                        idLote = loaded.lote.id,
+                        ubicacionId = ubicacion.id,
+                        idTipo = ID_TIPO_DESTINO,
+                        usuarioId = usuarioId,
+                        idOrigenUsuario = idOrigenUsuario,
+                    )
+                    val relacion = loaded.destinoRelacion
+                    val saved = if (relacion == null) {
+                        api.createLoteUbicacion(credentials, request)
+                    } else {
+                        api.updateLoteUbicacion(credentials, relacion.id, request)
+                    }
+                    val blockers = api.getLoteDeleteBlockers(credentials, loaded.lote.id)
+                    Triple(saved, ubicacion, blockers)
+                }
+            }
+            setCreating(false)
+            result.onSuccess { (relacion, ubicacion, blockers) ->
+                val current = loadedLote ?: return@onSuccess
+                loadedLote = current.copy(
+                    destinoRelacion = relacion,
+                    destinoUbicacion = ubicacion,
+                    deleteBlockers = blockers,
+                )
+                updateManagedLoteUi()
+                updateActionButtons(busy = false)
+                val message = if (current.destinoRelacion == null) {
+                    R.string.empaque_destino_asignado
+                } else {
+                    R.string.empaque_destino_actualizado
+                }
+                Toast.makeText(this@EmpaqueActivity, message, Toast.LENGTH_SHORT).show()
+            }.onFailure { error ->
+                Toast.makeText(this@EmpaqueActivity, mapDestinoError(error, claveUbicacion), Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     private fun submitReferenciaScan() {
         val loaded = loadedLote ?: return
         val valor = binding.referenciasScanInput.text?.toString().orEmpty().trim()
@@ -995,6 +1122,8 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.referenciasFilterInput.isEnabled = canEditContenido
         binding.referenciasScanInput.isEnabled = canEditContenido
         binding.referenciasScanTipoSpinner.isEnabled = canEditContenido
+        val canEditDestino = canEditContenido && (loadedLote?.canDeleteByEstatus == true)
+        binding.destinoClaveInput.isEnabled = canEditDestino
     }
 
     private fun updateTipoControlsEnabled(enabled: Boolean) {
@@ -1245,6 +1374,13 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
                 runCatching {
                     val api = PackingTrackerApi(config.serverUrl)
                     val created = api.createLote(credentials, request)
+                    ensureOrigenFromUsuario(
+                        api = api,
+                        credentials = credentials,
+                        loteId = created.id,
+                        usuarioId = usuarioId,
+                        usuarioUbicacionId = session.usuarioUbicacionId,
+                    )
                     loadFullLote(api, credentials, created.id)
                 }
             }
@@ -1331,11 +1467,61 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         }
     }
 
+    private fun mapDestinoError(error: Throwable, clave: String): String {
+        return when (error) {
+            is ApiException -> when (error.code) {
+                "unauthorized", "invalid_token", "token_expired" ->
+                    getString(R.string.empaque_error_auth)
+                "ubicacion_not_found" -> getString(R.string.empaque_destino_not_found, clave)
+                "destino_ya_definido" -> getString(R.string.empaque_error_destino_ya_definido)
+                "invalid_ubicacion_id" -> getString(R.string.empaque_error_destino_ubicacion)
+                else -> getString(R.string.empaque_error_destino, error.code)
+            }
+            else -> getString(R.string.empaque_error_network)
+        }
+    }
+
+    private fun ensureOrigenFromUsuario(
+        api: PackingTrackerApi,
+        credentials: ApiCredentials,
+        loteId: Int,
+        usuarioId: Int?,
+        usuarioUbicacionId: Int?,
+    ) {
+        if (usuarioId == null || usuarioUbicacionId == null) {
+            return
+        }
+        val existing = api.listLotesUbicaciones(
+            credentials = credentials,
+            idLote = loteId,
+            idTipo = ID_TIPO_ORIGEN,
+            page = 1,
+            items = 1,
+        ).items.firstOrNull()
+        if (existing != null) {
+            return
+        }
+        api.createLoteUbicacion(
+            credentials,
+            CreateLoteUbicacionRequest(
+                idLote = loteId,
+                ubicacionId = usuarioUbicacionId,
+                idTipo = ID_TIPO_ORIGEN,
+                usuarioId = usuarioId,
+                idOrigenUsuario = ORIGEN_USUARIO_INTERNO,
+            ),
+        )
+    }
+
     private data class LoteSnapshot(
         val detalle: LoteDetalle,
         val blockers: LoteDeleteBlockers,
         val contenido: LoteContenido,
         val unidadesTipo: List<UnidadMedida> = emptyList(),
+        val origenRelacion: LoteUbicacion? = null,
+        val origenUbicacion: Ubicacion? = null,
+        val destinoRelacion: LoteUbicacion? = null,
+        val destinoUbicacion: Ubicacion? = null,
     )
 
     private data class LoadedLote(
@@ -1347,6 +1533,10 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         val recepcionId: Int? = null,
         val deleteBlockers: LoteDeleteBlockers = LoteDeleteBlockers(),
         val contenido: LoteContenido = LoteContenido(),
+        val origenRelacion: LoteUbicacion? = null,
+        val origenUbicacion: Ubicacion? = null,
+        val destinoRelacion: LoteUbicacion? = null,
+        val destinoUbicacion: Ubicacion? = null,
     ) {
         val canDeleteByEstatus: Boolean
             get() = estatus == LoteEstatus.DISPONIBLE || estatus == LoteEstatus.CONTENIDO
@@ -1357,5 +1547,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
 
     companion object {
         private const val ORIGEN_USUARIO_INTERNO = 1
+        private const val ID_TIPO_ORIGEN = 1
+        private const val ID_TIPO_DESTINO = 2
     }
 }

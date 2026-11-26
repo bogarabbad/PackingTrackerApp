@@ -8,6 +8,7 @@ data class UserSession(
     val usuarioId: Int? = null,
     val usuarioCodigo: String? = null,
     val usuarioNombre: String? = null,
+    val usuarioUbicacionId: Int? = null,
 ) {
     fun isValid(nowEpochMs: Long = System.currentTimeMillis()): Boolean {
         if (accessToken.isBlank()) return false
@@ -25,6 +26,7 @@ class UserSessionStore(context: Context) {
         usuarioId = prefs.getIntOrNull(KEY_USUARIO_ID),
         usuarioCodigo = prefs.getString(KEY_USUARIO_CODIGO, null),
         usuarioNombre = prefs.getString(KEY_USUARIO_NOMBRE, null),
+        usuarioUbicacionId = prefs.getIntOrNull(KEY_USUARIO_UBICACION_ID),
     )
 
     fun save(session: UserSession) {
@@ -34,6 +36,7 @@ class UserSessionStore(context: Context) {
             .putIntOrClear(KEY_USUARIO_ID, session.usuarioId)
             .putString(KEY_USUARIO_CODIGO, session.usuarioCodigo)
             .putString(KEY_USUARIO_NOMBRE, session.usuarioNombre)
+            .putIntOrClear(KEY_USUARIO_UBICACION_ID, session.usuarioUbicacionId)
             .apply()
     }
 
@@ -61,5 +64,6 @@ class UserSessionStore(context: Context) {
         private const val KEY_USUARIO_ID = "usuario_id"
         private const val KEY_USUARIO_CODIGO = "usuario_codigo"
         private const val KEY_USUARIO_NOMBRE = "usuario_nombre"
+        private const val KEY_USUARIO_UBICACION_ID = "usuario_ubicacion_id"
     }
 }
