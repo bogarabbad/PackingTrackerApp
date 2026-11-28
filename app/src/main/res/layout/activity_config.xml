@@ -73,11 +73,88 @@
                 android:textColor="@color/on_background"
                 android:textSize="16sp" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/config_print_section"
+                android:textColor="@color/on_background"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/config_print_section_helper"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="13sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/etiquetaSizeLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/config_etiqueta_size">
+
+                <AutoCompleteTextView
+                    android:id="@+id/etiquetaSizeInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:importantForAutofill="no" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:id="@+id/etiquetaCustomSizeRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etiquetaAnchoLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:hint="@string/config_etiqueta_ancho_mm">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etiquetaAnchoInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etiquetaAltoLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:hint="@string/config_etiqueta_alto_mm">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etiquetaAltoInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/deviceUuidLayout"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:hint="@string/config_device_uuid"
                 app:helperText="@string/config_device_uuid_helper"
                 app:helperTextEnabled="true">

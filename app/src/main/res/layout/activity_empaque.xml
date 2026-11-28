@@ -215,6 +215,19 @@
                         </FrameLayout>
 
                         <ImageButton
+                            android:id="@+id/printEtiquetaButton"
+                            android:layout_width="@dimen/ui_action_button"
+                            android:layout_height="@dimen/ui_action_button"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/empaque_etiqueta_pdf"
+                            android:enabled="false"
+                            android:padding="10dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_print"
+                            android:tint="@color/on_background"
+                            android:visibility="gone" />
+
+                        <ImageButton
                             android:id="@+id/clearButton"
                             android:layout_width="@dimen/ui_action_button"
                             android:layout_height="@dimen/ui_action_button"

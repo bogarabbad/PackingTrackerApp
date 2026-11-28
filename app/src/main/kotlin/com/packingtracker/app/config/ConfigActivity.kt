@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -29,6 +30,7 @@ import java.net.URI
 class ConfigActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConfigBinding
     private lateinit var store: AppConfigStore
+    private var selectedEtiquetaPreset: EtiquetaTamanoPreset = EtiquetaTamanoPreset.DEFAULT
 
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -61,6 +63,7 @@ class ConfigActivity : AppCompatActivity() {
         val config = store.load()
         binding.serverUrlInput.setText(config.serverUrl)
         binding.tokenInput.setText(config.token)
+        setupEtiquetaSizeControls(config)
         renderEnrollmentState(config)
 
         binding.darkThemeSwitch.setOnCheckedChangeListener(null)
@@ -75,6 +78,67 @@ class ConfigActivity : AppCompatActivity() {
         binding.scanQrButton.setOnClickListener { requestCameraAndScan() }
         binding.enrollButton.setOnClickListener { enrollDevice() }
         binding.saveLocalButton.setOnClickListener { saveLocalPreferences() }
+    }
+
+    private fun setupEtiquetaSizeControls(config: AppConfig) {
+        val presets = EtiquetaTamanoPreset.entries
+        val labels = presets.map { getString(it.labelRes) }
+        binding.etiquetaSizeInput.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, labels),
+        )
+
+        selectedEtiquetaPreset = config.etiquetaTamano.preset
+        binding.etiquetaSizeInput.setText(getString(selectedEtiquetaPreset.labelRes), false)
+        binding.etiquetaAnchoInput.setText(config.etiquetaAnchoMm.toString())
+        binding.etiquetaAltoInput.setText(config.etiquetaAltoMm.toString())
+        updateEtiquetaCustomVisibility()
+
+        binding.etiquetaSizeInput.setOnItemClickListener { _, _, position, _ ->
+            selectedEtiquetaPreset = presets[position]
+            if (!selectedEtiquetaPreset.isCustom) {
+                binding.etiquetaAnchoInput.setText(selectedEtiquetaPreset.anchoMm.toString())
+                binding.etiquetaAltoInput.setText(selectedEtiquetaPreset.altoMm.toString())
+                binding.etiquetaAnchoLayout.error = null
+                binding.etiquetaAltoLayout.error = null
+            }
+            updateEtiquetaCustomVisibility()
+        }
+    }
+
+    private fun updateEtiquetaCustomVisibility() {
+        binding.etiquetaCustomSizeRow.visibility =
+            if (selectedEtiquetaPreset.isCustom) View.VISIBLE else View.GONE
+    }
+
+    private fun readEtiquetaTamanoOrNull(): EtiquetaTamano? {
+        binding.etiquetaAnchoLayout.error = null
+        binding.etiquetaAltoLayout.error = null
+
+        if (!selectedEtiquetaPreset.isCustom) {
+            return EtiquetaTamano(
+                anchoMm = selectedEtiquetaPreset.anchoMm,
+                altoMm = selectedEtiquetaPreset.altoMm,
+            )
+        }
+
+        val ancho = binding.etiquetaAnchoInput.text?.toString()?.trim()?.toIntOrNull()
+        val alto = binding.etiquetaAltoInput.text?.toString()?.trim()?.toIntOrNull()
+        if (
+            ancho == null ||
+            alto == null ||
+            ancho !in EtiquetaTamano.MIN_MM..EtiquetaTamano.MAX_MM ||
+            alto !in EtiquetaTamano.MIN_MM..EtiquetaTamano.MAX_MM
+        ) {
+            val message = getString(
+                R.string.config_etiqueta_size_invalid,
+                EtiquetaTamano.MIN_MM,
+                EtiquetaTamano.MAX_MM,
+            )
+            binding.etiquetaAnchoLayout.error = message
+            binding.etiquetaAltoLayout.error = message
+            return null
+        }
+        return EtiquetaTamano.sanitize(ancho, alto)
     }
 
     override fun onResume() {
@@ -145,11 +209,14 @@ class ConfigActivity : AppCompatActivity() {
 
     private fun saveLocalPreferences() {
         val draft = readDraftOrNull(requireEnrollmentFields = false) ?: return
+        val etiqueta = readEtiquetaTamanoOrNull() ?: return
         val current = store.load()
         store.save(
             current.copy(
                 serverUrl = draft.serverUrl,
                 token = draft.token,
+                etiquetaAnchoMm = etiqueta.anchoMm,
+                etiquetaAltoMm = etiqueta.altoMm,
             )
         )
         Toast.makeText(this, R.string.config_saved_local, Toast.LENGTH_SHORT).show()
@@ -157,6 +224,7 @@ class ConfigActivity : AppCompatActivity() {
 
     private fun enrollDevice() {
         val draft = readDraftOrNull(requireEnrollmentFields = true) ?: return
+        val etiqueta = readEtiquetaTamanoOrNull() ?: return
         setEnrolling(true)
 
         lifecycleScope.launch {
@@ -182,6 +250,8 @@ class ConfigActivity : AppCompatActivity() {
                     dispositivoNombre = enrollment.dispositivo.nombre,
                     tokenNombre = enrollment.token.nombre,
                     requiereAuth = enrollment.token.requiereAuth,
+                    etiquetaAnchoMm = etiqueta.anchoMm,
+                    etiquetaAltoMm = etiqueta.altoMm,
                 )
                 store.save(saved)
                 binding.tokenInput.setText(saved.token)
@@ -250,6 +320,9 @@ class ConfigActivity : AppCompatActivity() {
         binding.saveLocalButton.isEnabled = !busy
         binding.serverUrlInput.isEnabled = !busy
         binding.tokenInput.isEnabled = !busy
+        binding.etiquetaSizeInput.isEnabled = !busy
+        binding.etiquetaAnchoInput.isEnabled = !busy
+        binding.etiquetaAltoInput.isEnabled = !busy
         if (busy) {
             binding.enrollmentStatusText.setText(R.string.config_enrollment_busy)
         }

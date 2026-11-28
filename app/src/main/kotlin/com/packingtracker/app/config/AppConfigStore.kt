@@ -5,17 +5,27 @@ import android.content.Context
 class AppConfigStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun load(): AppConfig = AppConfig(
-        serverUrl = prefs.getString(KEY_SERVER_URL, "") ?: "",
-        token = prefs.getString(KEY_TOKEN, "") ?: "",
-        enrolled = prefs.getBoolean(KEY_ENROLLED, false),
-        dispositivoId = prefs.getIntOrNull(KEY_DISPOSITIVO_ID),
-        dispositivoNombre = prefs.getString(KEY_DISPOSITIVO_NOMBRE, null),
-        tokenNombre = prefs.getString(KEY_TOKEN_NOMBRE, null),
-        requiereAuth = prefs.getBoolean(KEY_REQUIERE_AUTH, true),
-    )
+    fun load(): AppConfig {
+        val default = EtiquetaTamanoPreset.DEFAULT
+        val etiqueta = EtiquetaTamano.sanitize(
+            prefs.getInt(KEY_ETIQUETA_ANCHO_MM, default.anchoMm),
+            prefs.getInt(KEY_ETIQUETA_ALTO_MM, default.altoMm),
+        )
+        return AppConfig(
+            serverUrl = prefs.getString(KEY_SERVER_URL, "") ?: "",
+            token = prefs.getString(KEY_TOKEN, "") ?: "",
+            enrolled = prefs.getBoolean(KEY_ENROLLED, false),
+            dispositivoId = prefs.getIntOrNull(KEY_DISPOSITIVO_ID),
+            dispositivoNombre = prefs.getString(KEY_DISPOSITIVO_NOMBRE, null),
+            tokenNombre = prefs.getString(KEY_TOKEN_NOMBRE, null),
+            requiereAuth = prefs.getBoolean(KEY_REQUIERE_AUTH, true),
+            etiquetaAnchoMm = etiqueta.anchoMm,
+            etiquetaAltoMm = etiqueta.altoMm,
+        )
+    }
 
     fun save(config: AppConfig) {
+        val etiqueta = config.etiquetaTamano
         prefs.edit()
             .putString(KEY_SERVER_URL, config.serverUrl.trim().trimEnd('/'))
             .putString(KEY_TOKEN, config.token.trim())
@@ -25,6 +35,8 @@ class AppConfigStore(context: Context) {
             .putString(KEY_DISPOSITIVO_NOMBRE, config.dispositivoNombre)
             .putString(KEY_TOKEN_NOMBRE, config.tokenNombre)
             .putBoolean(KEY_REQUIERE_AUTH, config.requiereAuth)
+            .putInt(KEY_ETIQUETA_ANCHO_MM, etiqueta.anchoMm)
+            .putInt(KEY_ETIQUETA_ALTO_MM, etiqueta.altoMm)
             .apply()
     }
 
@@ -51,5 +63,7 @@ class AppConfigStore(context: Context) {
         private const val KEY_DISPOSITIVO_NOMBRE = "dispositivo_nombre"
         private const val KEY_TOKEN_NOMBRE = "token_nombre"
         private const val KEY_REQUIERE_AUTH = "requiere_auth"
+        private const val KEY_ETIQUETA_ANCHO_MM = "etiqueta_ancho_mm"
+        private const val KEY_ETIQUETA_ALTO_MM = "etiqueta_alto_mm"
     }
 }

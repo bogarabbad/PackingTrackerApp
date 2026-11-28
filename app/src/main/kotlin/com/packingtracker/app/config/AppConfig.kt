@@ -8,4 +8,9 @@ data class AppConfig(
     val dispositivoNombre: String? = null,
     val tokenNombre: String? = null,
     val requiereAuth: Boolean = true,
-)
+    val etiquetaAnchoMm: Int = EtiquetaTamanoPreset.DEFAULT.anchoMm,
+    val etiquetaAltoMm: Int = EtiquetaTamanoPreset.DEFAULT.altoMm,
+) {
+    val etiquetaTamano: EtiquetaTamano
+        get() = EtiquetaTamano.sanitize(etiquetaAnchoMm, etiquetaAltoMm)
+}

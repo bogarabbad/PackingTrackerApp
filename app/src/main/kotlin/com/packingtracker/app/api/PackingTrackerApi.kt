@@ -682,6 +682,46 @@ class PackingTrackerApi(
         return executeObject(httpRequest) { data, _ -> parseLoteUbicacion(data) }
     }
 
+    fun downloadLoteEtiquetaPdf(
+        credentials: ApiCredentials,
+        id: Int,
+        anchoMm: Int? = null,
+        altoMm: Int? = null,
+    ): ByteArray {
+        val urlBuilder = "$root/lotes/$id/etiqueta.pdf".toHttpUrl().newBuilder()
+        if (anchoMm != null) {
+            urlBuilder.addQueryParameter("ancho_mm", anchoMm.toString())
+        }
+        if (altoMm != null) {
+            urlBuilder.addQueryParameter("alto_mm", altoMm.toString())
+        }
+        val httpRequest = Request.Builder()
+            .url(urlBuilder.build())
+            .get()
+            .header("Accept", "application/pdf")
+            .applyCredentials(credentials)
+            .build()
+
+        client.newCall(httpRequest).execute().use { response ->
+            val bytes = response.body?.bytes() ?: ByteArray(0)
+            if (!response.isSuccessful) {
+                val errorCode = runCatching {
+                    JSONObject(String(bytes, Charsets.UTF_8))
+                        .optJSONObject("error")
+                        ?.optString("error")
+                }.getOrNull()?.takeIf { it.isNotBlank() }
+                throw ApiException(
+                    code = errorCode ?: "http_${response.code}",
+                    httpStatus = response.code,
+                )
+            }
+            if (bytes.isEmpty()) {
+                throw ApiException(code = "invalid_response", httpStatus = response.code)
+            }
+            return bytes
+        }
+    }
+
     fun getLote(credentials: ApiCredentials, id: Int): Lote {
         val httpRequest = Request.Builder()
             .url("$root/lotes/$id")

@@ -17,6 +17,7 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -53,6 +54,7 @@ import com.packingtracker.app.databinding.ItemLoteTipoBinding
 import com.packingtracker.app.login.LoginActivity
 import com.packingtracker.app.ui.ClientDateTime
 import com.packingtracker.app.ui.UserSessionBar
+import java.io.File
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -102,6 +104,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.retryButton.setOnClickListener { loadCatalog() }
         binding.createButton.setOnClickListener { createLote() }
         binding.clearButton.setOnClickListener { clearSelection() }
+        binding.printEtiquetaButton.setOnClickListener { openLoteEtiquetaPdf() }
         binding.deleteLoteButton.setOnClickListener { confirmDeleteManagedLote() }
         binding.filterFinalButton.setOnClickListener { setFilter(finales = true) }
         binding.filterNoFinalButton.setOnClickListener { setFilter(finales = false) }
@@ -1096,6 +1099,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         val hasLote = loadedLote != null
         val canCreate = !busy && !hasLote && selectedTipo != null && sessionStore.load().hasUbicacion
         val canDelete = !busy && hasLote && (loadedLote?.canDelete == true)
+        val canPrint = !busy && hasLote
         val canClear = !busy && (hasLote || !binding.loteIdInput.text.isNullOrBlank())
         val canChangeTipo = !busy && !hasLote
 
@@ -1104,9 +1108,13 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
             binding.createButton.isEnabled = false
             binding.deleteLoteButton.visibility = View.VISIBLE
             binding.deleteLoteButton.isEnabled = canDelete
+            binding.printEtiquetaButton.visibility = View.VISIBLE
+            binding.printEtiquetaButton.isEnabled = canPrint
         } else {
             binding.deleteLoteButton.visibility = View.GONE
             binding.deleteLoteButton.isEnabled = false
+            binding.printEtiquetaButton.visibility = View.GONE
+            binding.printEtiquetaButton.isEnabled = false
             binding.createButton.visibility = View.VISIBLE
             binding.createButton.isEnabled = canCreate
         }
@@ -1116,6 +1124,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.clearButton.alpha = if (canClear) 1f else 0.35f
         binding.createButton.alpha = if (canCreate) 1f else 0.35f
         binding.deleteLoteButton.alpha = if (canDelete) 1f else 0.35f
+        binding.printEtiquetaButton.alpha = if (canPrint) 1f else 0.35f
         updateTipoControlsEnabled(canChangeTipo)
         val canEditContenido = !busy && hasLote
         binding.referenciasRefreshButton.isEnabled = canEditContenido
@@ -1241,7 +1250,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
                     showError(getString(R.string.empaque_error_no_tipos))
                 } else {
                     filterFinales = true
-                    selectedTipo = null
+                    selectedTipo = defaultTipoCaja()
                     applyFilterIconStyles()
                     renderTipos()
                     updateSelectionUi()
@@ -1253,6 +1262,12 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         }
     }
 
+    private fun defaultTipoCaja(): LoteTipo? {
+        return tipos.firstOrNull {
+            it.esFinal && it.codigo.equals(CODIGO_TIPO_CAJA, ignoreCase = true)
+        } ?: tipos.firstOrNull { it.esFinal }
+    }
+
     private fun setFilter(finales: Boolean) {
         if (loadedLote != null) return
         if (filterFinales == finales) return
@@ -1261,7 +1276,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
 
         val stillVisible = selectedTipo?.let { it.esFinal == filterFinales } == true
         if (!stillVisible) {
-            selectedTipo = null
+            selectedTipo = if (finales) defaultTipoCaja() else null
         }
         renderTipos()
         updateSelectionUi()
@@ -1342,6 +1357,67 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
 
         binding.tipoSectionTitle.text = getString(R.string.empaque_filter_label_selected, tipo.nombre)
         updateActionButtons(busy = false)
+    }
+
+    private fun openLoteEtiquetaPdf() {
+        val loaded = loadedLote ?: return
+        val config = configStore.load()
+        val credentials = ApiCredentialsResolver.resolve(config, sessionStore.load())
+        if (credentials == null) {
+            Toast.makeText(this, R.string.empaque_error_auth, Toast.LENGTH_LONG).show()
+            return
+        }
+
+        setCreating(true)
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val etiqueta = config.etiquetaTamano
+                    val bytes = PackingTrackerApi(config.serverUrl)
+                        .downloadLoteEtiquetaPdf(
+                            credentials = credentials,
+                            id = loaded.lote.id,
+                            anchoMm = etiqueta.anchoMm,
+                            altoMm = etiqueta.altoMm,
+                        )
+                    val file = File(cacheDir, "lote-${loaded.lote.id}-etiqueta.pdf")
+                    file.writeBytes(bytes)
+                    file
+                }
+            }
+            setCreating(false)
+            result.onSuccess { file ->
+                val uri = FileProvider.getUriForFile(
+                    this@EmpaqueActivity,
+                    "${packageName}.fileprovider",
+                    file,
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                runCatching {
+                    startActivity(intent)
+                    Toast.makeText(
+                        this@EmpaqueActivity,
+                        R.string.empaque_etiqueta_pdf_opened,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }.onFailure {
+                    Toast.makeText(
+                        this@EmpaqueActivity,
+                        R.string.empaque_etiqueta_pdf_no_viewer,
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
+            }.onFailure { error ->
+                val message = when (error) {
+                    is ApiException -> getString(R.string.empaque_etiqueta_pdf_error)
+                    else -> getString(R.string.empaque_error_network)
+                }
+                Toast.makeText(this@EmpaqueActivity, message, Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun createLote() {
@@ -1561,5 +1637,6 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         private const val ORIGEN_USUARIO_INTERNO = 1
         private const val ID_TIPO_ORIGEN = 1
         private const val ID_TIPO_DESTINO = 2
+        private const val CODIGO_TIPO_CAJA = "caja"
     }
 }
