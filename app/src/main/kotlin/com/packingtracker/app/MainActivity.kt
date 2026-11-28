@@ -14,6 +14,7 @@ import com.packingtracker.app.auth.UserSessionStore
 import com.packingtracker.app.config.AppConfigStore
 import com.packingtracker.app.config.ConfigActivity
 import com.packingtracker.app.databinding.ActivityMainBinding
+import com.packingtracker.app.embarques.EmbarquesActivity
 import com.packingtracker.app.empaque.EmpaqueActivity
 import com.packingtracker.app.login.LoginActivity
 import com.packingtracker.app.ui.UserSessionBar
@@ -36,12 +37,17 @@ class MainActivity : AppCompatActivity() {
 
         binding.gateConfigButton.setOnClickListener { openConfig() }
         binding.homeEmpaqueButton.setOnClickListener { openEmpaque() }
+        binding.homeEmbarquesButton.setOnClickListener { openEmbarques() }
         binding.menuButton.setOnClickListener {
             binding.drawerLayout.openDrawer(GravityCompat.START)
         }
         binding.drawerContent.drawerEmpaqueButton.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             openEmpaque()
+        }
+        binding.drawerContent.drawerEmbarquesButton.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            openEmbarques()
         }
         binding.drawerContent.drawerConfigButton.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -79,6 +85,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun openEmpaque() {
         startActivity(Intent(this, EmpaqueActivity::class.java))
+    }
+
+    private fun openEmbarques() {
+        startActivity(Intent(this, EmbarquesActivity::class.java))
     }
 
     private fun logoutUser() {

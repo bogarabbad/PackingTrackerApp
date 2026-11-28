@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ui_toolbar_height"
+        android:background="@color/primary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="2dp"
+        android:paddingEnd="8dp">
+
+        <ImageButton
+            android:id="@+id/closeButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/embarques_list_close"
+            android:padding="8dp"
+            android:src="@drawable/ic_close"
+            android:tint="@color/on_primary" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="2dp"
+            android:text="@string/embarques_nav_list"
+            android:textColor="@color/on_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/filtersContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:paddingStart="10dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/embarques_list_filters_hint"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/filterIdInput"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_lote_id_input"
+                android:hint="@string/embarques_list_filter_id"
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:maxLines="1"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:textColor="@color/on_background"
+                android:textColorHint="@color/on_surface_variant"
+                android:textSize="13sp" />
+
+            <ImageButton
+                android:id="@+id/filterSearchButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/embarques_list_filter_apply"
+                android:padding="8dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_search"
+                android:tint="@color/on_background" />
+        </LinearLayout>
+
+        <Spinner
+            android:id="@+id/filterUnidadSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_lote_id_input"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <Spinner
+            android:id="@+id/filterEstadoSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_lote_id_input"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/loadingContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/embarques_list_loading"
+                android:textColor="@color/on_background"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/pageInfoText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="4dp"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="12sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/expedicionesRecycler"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingBottom="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/surface"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/prevPageButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="40dp"
+                    android:text="@string/embarques_list_prev"
+                    android:textAllCaps="false"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/nextPageButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="40dp"
+                    android:text="@string/embarques_list_next"
+                    android:textAllCaps="false"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/emptyContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/embarques_list_empty"
+                android:textColor="@color/on_background"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/errorContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/errorMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/on_background"
+                android:textSize="18sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/retryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:minHeight="56dp"
+                android:text="@string/embarques_retry"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

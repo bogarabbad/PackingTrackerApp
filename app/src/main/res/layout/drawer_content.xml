@@ -48,6 +48,26 @@
         app:iconTint="@color/on_surface" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/drawerEmbarquesButton"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start|center_vertical"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="@dimen/ui_drawer_item_height"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:text="@string/embarques_title"
+        android:textColor="@color/on_surface"
+        android:textSize="14sp"
+        app:icon="@drawable/ic_embarques"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        app:iconSize="20dp"
+        app:iconTint="@color/on_surface" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/drawerLogoutButton"
         style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="match_parent"

@@ -387,6 +387,158 @@ class PackingTrackerApi(
         return executeObject(httpRequest) { data, _ -> parseLote(data) }
     }
 
+    fun listExpediciones(
+        credentials: ApiCredentials,
+        page: Int = 1,
+        items: Int = 20,
+        idUnidad: Int? = null,
+        abierta: Boolean? = null,
+        q: String? = null,
+    ): PagedResult<Expedicion> {
+        val urlBuilder = "$root/expediciones".toHttpUrl().newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("items", items.toString())
+        if (idUnidad != null) {
+            urlBuilder.addQueryParameter("id_unidad", idUnidad.toString())
+        }
+        if (abierta != null) {
+            urlBuilder.addQueryParameter("abierta", abierta.toString())
+        }
+        if (!q.isNullOrBlank()) {
+            urlBuilder.addQueryParameter("q", q.trim())
+        }
+
+        val httpRequest = Request.Builder()
+            .url(urlBuilder.build())
+            .get()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executePaged(httpRequest) { array, meta ->
+            PagedResult(
+                items = array.mapObjects { parseExpedicion(it) },
+                meta = meta,
+            )
+        }
+    }
+
+    fun getExpedicion(credentials: ApiCredentials, id: Int): Expedicion {
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones/$id")
+            .get()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseExpedicion(data) }
+    }
+
+    fun getExpedicionCarga(credentials: ApiCredentials, id: Int): ExpedicionCarga {
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones/$id/carga")
+            .get()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseExpedicionCarga(data) }
+    }
+
+    fun createExpedicion(
+        credentials: ApiCredentials,
+        request: CreateExpedicionRequest,
+    ): Expedicion {
+        val bodyJson = JSONObject()
+            .put("ID_UNIDAD", request.idUnidad)
+            .put("FECHA_CIERRE", request.fechaCierre ?: JSONObject.NULL)
+            .put("ID_UBICACION_SALIDA", request.idUbicacionSalida ?: JSONObject.NULL)
+            .put("UBICACION_SALIDA_ID", request.ubicacionSalidaId ?: JSONObject.NULL)
+            .put("USUARIO_ID", request.usuarioId ?: JSONObject.NULL)
+            .put("ID_ORIGEN_USUARIO", request.idOrigenUsuario ?: JSONObject.NULL)
+            .toString()
+
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones")
+            .post(bodyJson.toRequestBody(JSON_MEDIA_TYPE))
+            .header("Accept", "application/json")
+            .header("Content-Type", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseExpedicion(data) }
+    }
+
+    fun updateExpedicion(
+        credentials: ApiCredentials,
+        id: Int,
+        request: UpdateExpedicionRequest,
+    ): Expedicion {
+        val bodyJson = JSONObject()
+            .put("ID_UNIDAD", request.idUnidad)
+            .put("FECHA_CIERRE", request.fechaCierre ?: JSONObject.NULL)
+            .put("ID_UBICACION_SALIDA", request.idUbicacionSalida ?: JSONObject.NULL)
+            .put("UBICACION_SALIDA_ID", request.ubicacionSalidaId ?: JSONObject.NULL)
+            .put("USUARIO_ID", request.usuarioId ?: JSONObject.NULL)
+            .put("ID_ORIGEN_USUARIO", request.idOrigenUsuario ?: JSONObject.NULL)
+            .toString()
+
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones/$id")
+            .put(bodyJson.toRequestBody(JSON_MEDIA_TYPE))
+            .header("Accept", "application/json")
+            .header("Content-Type", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseExpedicion(data) }
+    }
+
+    fun deleteExpedicion(credentials: ApiCredentials, id: Int) {
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones/$id")
+            .delete()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        executeEmpty(httpRequest)
+    }
+
+    fun createExpedicionLote(
+        credentials: ApiCredentials,
+        request: CreateExpedicionLoteRequest,
+    ): ExpedicionLote {
+        val bodyJson = JSONObject()
+            .put("ID_EXPEDICION", request.idExpedicion)
+            .put("ID_LOTE", request.idLote)
+            .put("EMBARCADO_EN", request.embarcadoEn ?: JSONObject.NULL)
+            .put("USUARIO_ID", request.usuarioId ?: JSONObject.NULL)
+            .put("ID_ORIGEN_USUARIO", request.idOrigenUsuario ?: JSONObject.NULL)
+            .toString()
+
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones-lotes")
+            .post(bodyJson.toRequestBody(JSON_MEDIA_TYPE))
+            .header("Accept", "application/json")
+            .header("Content-Type", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        return executeObject(httpRequest) { data, _ -> parseExpedicionLote(data) }
+    }
+
+    fun deleteExpedicionLote(credentials: ApiCredentials, id: Int) {
+        val httpRequest = Request.Builder()
+            .url("$root/expediciones-lotes/$id")
+            .delete()
+            .header("Accept", "application/json")
+            .applyCredentials(credentials)
+            .build()
+
+        executeEmpty(httpRequest)
+    }
+
     fun listUbicaciones(
         credentials: ApiCredentials,
         q: String? = null,
@@ -883,6 +1035,74 @@ class PackingTrackerApi(
         creadoEn = json.getString("CREADO_EN"),
         actualizadoEn = json.getString("ACTUALIZADO_EN"),
     )
+
+    private fun parseExpedicion(json: JSONObject): Expedicion = Expedicion(
+        id = json.getInt("ID"),
+        idUnidad = json.getInt("ID_UNIDAD"),
+        fechaCierre = json.nullableString("FECHA_CIERRE"),
+        idUbicacionSalida = json.nullableInt("ID_UBICACION_SALIDA"),
+        ubicacionSalidaId = json.nullableInt("UBICACION_SALIDA_ID"),
+        usuarioId = json.nullableInt("USUARIO_ID"),
+        idOrigenUsuario = json.nullableInt("ID_ORIGEN_USUARIO"),
+        creadoEn = json.getString("CREADO_EN"),
+        actualizadoEn = json.getString("ACTUALIZADO_EN"),
+    )
+
+    private fun parseExpedicionLote(json: JSONObject): ExpedicionLote = ExpedicionLote(
+        id = json.getInt("ID"),
+        idExpedicion = json.getInt("ID_EXPEDICION"),
+        idLote = json.getInt("ID_LOTE"),
+        embarcadoEn = json.nullableString("EMBARCADO_EN"),
+        usuarioId = json.nullableInt("USUARIO_ID"),
+        idOrigenUsuario = json.nullableInt("ID_ORIGEN_USUARIO"),
+        creadoEn = json.getString("CREADO_EN"),
+        actualizadoEn = json.getString("ACTUALIZADO_EN"),
+    )
+
+    private fun parseExpedicionCarga(json: JSONObject): ExpedicionCarga {
+        val resumenJson = json.optJSONObject("RESUMEN") ?: JSONObject()
+        val porTipoArray = resumenJson.optJSONArray("POR_TIPO") ?: JSONArray()
+        val lotesArray = json.optJSONArray("LOTES") ?: JSONArray()
+        return ExpedicionCarga(
+            expedicion = parseExpedicion(json.getJSONObject("EXPEDICION")),
+            resumen = ExpedicionCargaResumen(
+                lotes = resumenJson.optInt("LOTES", 0),
+                productos = resumenJson.optInt("PRODUCTOS", 0),
+                porTipo = porTipoArray.mapObjects { item ->
+                    ExpedicionCargaResumenPorTipo(
+                        idTipo = item.getInt("ID_TIPO"),
+                        codigo = item.getString("CODIGO"),
+                        nombre = item.getString("NOMBRE"),
+                        esFinal = item.getBoolean("ES_FINAL"),
+                        lotes = item.getInt("LOTES"),
+                        productos = item.getInt("PRODUCTOS"),
+                    )
+                },
+            ),
+            lotes = lotesArray.mapObjects { parseExpedicionCargaLote(it) },
+        )
+    }
+
+    private fun parseExpedicionCargaLote(json: JSONObject): ExpedicionCargaLote {
+        val tipoJson = json.optJSONObject("TIPO")
+        return ExpedicionCargaLote(
+            id = json.getInt("ID"),
+            idTipo = json.getInt("ID_TIPO"),
+            padreId = json.nullableInt("PADRE_ID"),
+            idUnidad = json.nullableInt("ID_UNIDAD"),
+            embarqueId = json.nullableInt("EMBARQUE_ID"),
+            embarcadoEn = json.nullableString("EMBARCADO_EN"),
+            embarcadoDirecto = json.optBoolean("EMBARCADO_DIRECTO", false),
+            tipo = tipoJson?.let {
+                ExpedicionCargaLoteTipo(
+                    id = it.optInt("ID", json.getInt("ID_TIPO")),
+                    codigo = it.getString("CODIGO"),
+                    nombre = it.getString("NOMBRE"),
+                    esFinal = it.getBoolean("ES_FINAL"),
+                )
+            },
+        )
+    }
 
     private fun <T> JSONArray.mapObjects(mapper: (JSONObject) -> T): List<T> {
         val items = ArrayList<T>(length())

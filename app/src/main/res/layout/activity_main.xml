@@ -145,6 +145,42 @@
                             android:layout_height="0dp"
                             android:layout_weight="0.05" />
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/home_module_gap"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:weightSum="1">
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="0.05" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/homeEmbarquesButton"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/home_module_height"
+                            android:layout_weight="0.9"
+                            android:gravity="center"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:text="@string/embarques_home_button"
+                            android:textAllCaps="false"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:icon="@drawable/ic_embarques"
+                            app:iconGravity="textTop"
+                            app:iconPadding="8dp"
+                            app:iconSize="@dimen/home_module_icon" />
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="0.05" />
+                    </LinearLayout>
                 </LinearLayout>
             </ScrollView>
 
