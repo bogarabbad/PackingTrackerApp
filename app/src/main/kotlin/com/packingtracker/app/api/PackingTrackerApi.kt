@@ -601,17 +601,23 @@ class PackingTrackerApi(
 
     fun listLotesUbicaciones(
         credentials: ApiCredentials,
-        idLote: Int,
+        idLote: Int? = null,
         idTipo: Int? = null,
+        ubicacionId: Int? = null,
         page: Int = 1,
         items: Int = 20,
     ): PagedResult<LoteUbicacion> {
         val urlBuilder = "$root/lotes-ubicaciones".toHttpUrl().newBuilder()
             .addQueryParameter("page", page.toString())
             .addQueryParameter("items", items.toString())
-            .addQueryParameter("id_lote", idLote.toString())
+        if (idLote != null) {
+            urlBuilder.addQueryParameter("id_lote", idLote.toString())
+        }
         if (idTipo != null) {
             urlBuilder.addQueryParameter("id_tipo", idTipo.toString())
+        }
+        if (ubicacionId != null) {
+            urlBuilder.addQueryParameter("ubicacion_id", ubicacionId.toString())
         }
 
         val httpRequest = Request.Builder()

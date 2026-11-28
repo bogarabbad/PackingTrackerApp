@@ -835,6 +835,10 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
             Toast.makeText(this, R.string.empaque_destino_blocked_estatus, Toast.LENGTH_LONG).show()
             return
         }
+        if (!sessionStore.load().hasUbicacion) {
+            Toast.makeText(this, R.string.error_usuario_sin_ubicacion, Toast.LENGTH_LONG).show()
+            return
+        }
         val clave = binding.destinoClaveInput.text?.toString().orEmpty().trim()
         if (clave.isEmpty()) return
         binding.destinoClaveInput.setText("")
@@ -1090,7 +1094,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
 
     private fun updateActionButtons(busy: Boolean) {
         val hasLote = loadedLote != null
-        val canCreate = !busy && !hasLote && selectedTipo != null
+        val canCreate = !busy && !hasLote && selectedTipo != null && sessionStore.load().hasUbicacion
         val canDelete = !busy && hasLote && (loadedLote?.canDelete == true)
         val canClear = !busy && (hasLote || !binding.loteIdInput.text.isNullOrBlank())
         val canChangeTipo = !busy && !hasLote
@@ -1122,7 +1126,9 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
         binding.referenciasFilterInput.isEnabled = canEditContenido
         binding.referenciasScanInput.isEnabled = canEditContenido
         binding.referenciasScanTipoSpinner.isEnabled = canEditContenido
-        val canEditDestino = canEditContenido && (loadedLote?.canDeleteByEstatus == true)
+        val canEditDestino = canEditContenido &&
+            (loadedLote?.canDeleteByEstatus == true) &&
+            sessionStore.load().hasUbicacion
         binding.destinoClaveInput.isEnabled = canEditDestino
     }
 
@@ -1347,6 +1353,10 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
             Toast.makeText(this, R.string.empaque_error_auth, Toast.LENGTH_LONG).show()
             return
         }
+        if (!session.hasUbicacion) {
+            Toast.makeText(this, R.string.error_usuario_sin_ubicacion, Toast.LENGTH_LONG).show()
+            return
+        }
 
         val loaded = loadedLote
         val padreId = if (
@@ -1435,6 +1445,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
                 "lote_has_hijos" -> getString(R.string.empaque_error_delete_hijos)
                 "lote_has_ubicaciones" -> getString(R.string.empaque_error_delete_ubicaciones)
                 "record_in_use", "http_409" -> getString(R.string.empaque_error_delete_in_use)
+                "usuario_sin_ubicacion" -> getString(R.string.error_usuario_sin_ubicacion)
                 "not_found", "http_404" -> getString(R.string.empaque_error_generic, error.code)
                 else -> getString(R.string.empaque_error_generic, error.code)
             }
@@ -1475,6 +1486,7 @@ class EmpaqueActivity : AppCompatActivity(), LotesListaFragment.Listener, LotesL
                 "ubicacion_not_found" -> getString(R.string.empaque_destino_not_found, clave)
                 "destino_ya_definido" -> getString(R.string.empaque_error_destino_ya_definido)
                 "invalid_ubicacion_id" -> getString(R.string.empaque_error_destino_ubicacion)
+                "usuario_sin_ubicacion" -> getString(R.string.error_usuario_sin_ubicacion)
                 else -> getString(R.string.empaque_error_destino, error.code)
             }
             else -> getString(R.string.empaque_error_network)

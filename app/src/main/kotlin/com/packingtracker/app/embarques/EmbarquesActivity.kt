@@ -23,6 +23,7 @@ import com.packingtracker.app.api.CreateExpedicionRequest
 import com.packingtracker.app.api.Expedicion
 import com.packingtracker.app.api.ExpedicionCarga
 import com.packingtracker.app.api.ExpedicionCargaLote
+import com.packingtracker.app.api.Lote
 import com.packingtracker.app.api.LoteEstatus
 import com.packingtracker.app.api.PackingTrackerApi
 import com.packingtracker.app.api.Ubicacion
@@ -44,7 +45,9 @@ import kotlinx.coroutines.withContext
 class EmbarquesActivity :
     AppCompatActivity(),
     ExpedicionesListaFragment.Listener,
-    ExpedicionesListaFragment.Host {
+    ExpedicionesListaFragment.Host,
+    LotesEmbarqueListaFragment.Listener,
+    LotesEmbarqueListaFragment.Host {
 
     private lateinit var binding: ActivityEmbarquesBinding
     private lateinit var configStore: AppConfigStore
@@ -69,7 +72,9 @@ class EmbarquesActivity :
             toolbar = binding.toolbar,
             drawerContent = binding.drawerContent,
             onConsultarExpediciones = { openExpedicionesModal() },
-            onBeforeBack = { closeExpedicionesListaIfOpen() },
+            onBeforeBack = {
+                closeLotesEmbarqueListaIfOpen() || closeExpedicionesListaIfOpen()
+            },
         )
 
         binding.retryButton.setOnClickListener { loadCatalog() }
@@ -78,6 +83,7 @@ class EmbarquesActivity :
         binding.deleteExpedicionButton.setOnClickListener { confirmDeleteExpedicion() }
         binding.cerrarButton.setOnClickListener { confirmCerrarExpedicion() }
         binding.cargaRefreshButton.setOnClickListener { refreshCarga() }
+        binding.loteSearchButton.setOnClickListener { openLotesEmbarqueModal() }
         binding.expedicionIdInput.setOnEditorActionListener { _, actionId, event ->
             if (isSubmitEditorAction(actionId, event)) {
                 lookupExpedicionFromInput()
@@ -125,6 +131,53 @@ class EmbarquesActivity :
     override fun onExpedicionSelected(expedicion: Expedicion) {
         binding.expedicionIdInput.setText(expedicion.id.toString())
         lookupExpedicionById(expedicion.id)
+    }
+
+    override fun onLoteEmbarqueSelected(lote: Lote) {
+        binding.loteScanInput.setText(lote.id.toString())
+        embarcarLote(lote.id)
+    }
+
+    private fun openLotesEmbarqueModal() {
+        val loaded = loadedExpedicion ?: return
+        if (!loaded.abierta) {
+            Toast.makeText(this, R.string.embarques_error_cerrada, Toast.LENGTH_LONG).show()
+            return
+        }
+        val ubicacionId = sessionStore.load().usuarioUbicacionId
+        if (ubicacionId == null) {
+            Toast.makeText(this, R.string.embarques_lote_search_no_ubicacion, Toast.LENGTH_LONG).show()
+            return
+        }
+        if (supportFragmentManager.findFragmentByTag(LotesEmbarqueListaFragment.TAG) != null) {
+            binding.lotesEmbarqueOverlay.visibility = View.VISIBLE
+            return
+        }
+        binding.lotesEmbarqueOverlay.visibility = View.VISIBLE
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.lotesEmbarqueOverlay,
+                LotesEmbarqueListaFragment.newInstance(ubicacionId),
+                LotesEmbarqueListaFragment.TAG,
+            )
+            .commit()
+    }
+
+    override fun closeLotesEmbarqueLista() {
+        supportFragmentManager.findFragmentByTag(LotesEmbarqueListaFragment.TAG)?.let { fragment ->
+            supportFragmentManager.beginTransaction()
+                .remove(fragment)
+                .commit()
+        }
+        binding.lotesEmbarqueOverlay.visibility = View.GONE
+    }
+
+    private fun closeLotesEmbarqueListaIfOpen(): Boolean {
+        if (binding.lotesEmbarqueOverlay.visibility != View.VISIBLE) {
+            return false
+        }
+        closeLotesEmbarqueLista()
+        return true
     }
 
     private fun openExpedicionesModal() {
@@ -335,9 +388,14 @@ class EmbarquesActivity :
         val unidad = selectedUnidad ?: return
         val credentials = resolveCredentials() ?: return
         val session = sessionStore.load()
+        if (!session.hasUbicacion) {
+            Toast.makeText(this, R.string.error_usuario_sin_ubicacion, Toast.LENGTH_LONG).show()
+            return
+        }
         val usuarioId = session.usuarioId
         val request = CreateExpedicionRequest(
             idUnidad = unidad.id,
+            ubicacionSalidaId = session.usuarioUbicacionId,
             usuarioId = usuarioId,
             idOrigenUsuario = if (usuarioId != null) ORIGEN_USUARIO_INTERNO else null,
         )
@@ -425,6 +483,10 @@ class EmbarquesActivity :
         val loaded = loadedExpedicion ?: return
         if (!loaded.abierta) {
             Toast.makeText(this, R.string.embarques_error_cerrada, Toast.LENGTH_LONG).show()
+            return
+        }
+        if (!sessionStore.load().hasUbicacion) {
+            Toast.makeText(this, R.string.error_usuario_sin_ubicacion, Toast.LENGTH_LONG).show()
             return
         }
         val clave = binding.salidaClaveInput.text?.toString().orEmpty().trim()
@@ -739,7 +801,8 @@ class EmbarquesActivity :
 
     private fun updateActionButtons(busy: Boolean) {
         val hasExpedicion = loadedExpedicion != null
-        val canCreate = !busy && !hasExpedicion && selectedUnidad != null
+        val canCreate = !busy && !hasExpedicion && selectedUnidad != null &&
+            sessionStore.load().hasUbicacion
         val canDelete = !busy && hasExpedicion &&
             (loadedExpedicion?.directLotes?.isEmpty() == true)
         val canClear = !busy && (hasExpedicion || !binding.expedicionIdInput.text.isNullOrBlank())
@@ -768,9 +831,12 @@ class EmbarquesActivity :
             button.alpha = if (canChangeUnidad) 1f else 0.7f
         }
 
+        val hasUbicacion = sessionStore.load().hasUbicacion
         val canEditAbierta = !busy && hasExpedicion && (loadedExpedicion?.abierta == true)
         binding.loteScanInput.isEnabled = canEditAbierta
-        binding.salidaClaveInput.isEnabled = canEditAbierta
+        binding.loteSearchButton.isEnabled = canEditAbierta && hasUbicacion
+        binding.loteSearchButton.alpha = if (canEditAbierta && hasUbicacion) 1f else 0.35f
+        binding.salidaClaveInput.isEnabled = canEditAbierta && hasUbicacion
         binding.cerrarButton.isEnabled = canEditAbierta
         binding.cargaRefreshButton.isEnabled = !busy && hasExpedicion
     }
@@ -821,6 +887,7 @@ class EmbarquesActivity :
                 "expedicion_cerrada" -> getString(R.string.embarques_error_cerrada)
                 "lote_ya_embarcado" -> getString(R.string.embarques_error_lote_embarcado)
                 "record_in_use", "http_409" -> getString(R.string.embarques_error_in_use)
+                "usuario_sin_ubicacion" -> getString(R.string.error_usuario_sin_ubicacion)
                 else -> getString(R.string.embarques_error_generic, error.code)
             }
             else -> getString(R.string.embarques_error_network)

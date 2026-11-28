@@ -375,22 +375,42 @@
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
 
-                            <EditText
-                                android:id="@+id/loteScanInput"
+                            <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="36dp"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:background="@drawable/bg_lote_id_input"
-                                android:hint="@string/embarques_lote_scan_hint"
-                                android:importantForAutofill="no"
-                                android:imeOptions="actionDone"
-                                android:inputType="number"
-                                android:maxLines="1"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp"
-                                android:textColor="@color/on_background"
-                                android:textColorHint="@color/on_surface_variant"
-                                android:textSize="12sp" />
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <EditText
+                                    android:id="@+id/loteScanInput"
+                                    android:layout_width="0dp"
+                                    android:layout_height="36dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/bg_lote_id_input"
+                                    android:hint="@string/embarques_lote_scan_hint"
+                                    android:importantForAutofill="no"
+                                    android:imeOptions="actionDone"
+                                    android:inputType="number"
+                                    android:maxLines="1"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
+                                    android:textColor="@color/on_background"
+                                    android:textColorHint="@color/on_surface_variant"
+                                    android:textSize="12sp" />
+
+                                <ImageButton
+                                    android:id="@+id/loteSearchButton"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:layout_marginStart="4dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:contentDescription="@string/embarques_lote_search"
+                                    android:padding="6dp"
+                                    android:scaleType="centerInside"
+                                    android:src="@drawable/ic_search"
+                                    android:tint="@color/on_background" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <LinearLayout
@@ -510,6 +530,16 @@
             android:background="@color/background"
             android:clickable="true"
             android:elevation="8dp"
+            android:focusable="true"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@+id/lotesEmbarqueOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/background"
+            android:clickable="true"
+            android:elevation="10dp"
             android:focusable="true"
             android:visibility="gone" />
     </FrameLayout>

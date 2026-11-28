@@ -10,6 +10,9 @@ data class UserSession(
     val usuarioNombre: String? = null,
     val usuarioUbicacionId: Int? = null,
 ) {
+    val hasUbicacion: Boolean
+        get() = usuarioUbicacionId != null
+
     fun isValid(nowEpochMs: Long = System.currentTimeMillis()): Boolean {
         if (accessToken.isBlank()) return false
         if (expiresAtEpochMs <= 0L) return true

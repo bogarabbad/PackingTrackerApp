@@ -60,6 +60,13 @@
     <string name="embarques_salida_not_found">No se encontró la ubicación con clave %1$s</string>
     <string name="embarques_lote_scan_title">Embarcar lote</string>
     <string name="embarques_lote_scan_hint">Escanear lote suelto</string>
+    <string name="embarques_lote_search">Buscar lotes a embarcar</string>
+    <string name="embarques_lote_search_title">Lotes a embarcar</string>
+    <string name="embarques_lote_search_hint">Lotes con origen en tu ubicación, no embarcados.</string>
+    <string name="embarques_lote_search_empty">No hay lotes disponibles en tu ubicación.</string>
+    <string name="embarques_lote_search_no_ubicacion">Tu usuario no tiene ubicación asignada.</string>
+    <string name="error_usuario_sin_ubicacion">No se puede crear: tu usuario no tiene una ubicación asignada.</string>
+    <string name="embarques_lote_search_loading">Cargando lotes…</string>
     <string name="embarques_lote_added">Lote #%1$d embarcado</string>
     <string name="embarques_lote_removed">Lote quitado de la expedición</string>
     <string name="embarques_lote_remove_confirm">¿Quitar el lote #%1$d de la expedición?</string>
